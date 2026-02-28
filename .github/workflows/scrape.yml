@@ -1,9 +1,7 @@
 name: Dorar Tafseer Scraper
 
 on:
-  workflow_dispatch:        # تشغيل يدوي من GitHub
-  schedule:
-    - cron: '0 2 * * 0'    # كل أحد الساعة 2 صباحاً (UTC)
+  workflow_dispatch:   # تشغيل يدوي فقط من GitHub
 
 jobs:
   scrape:
@@ -21,15 +19,18 @@ jobs:
       - name: Install dependencies
         run: pip install requests beautifulsoup4
 
-      - name: Run scraper (full Quran)
+      - name: Run scraper
         run: |
-          # تعطيل وضع الاختبار وتشغيل كل القرآن
           sed 's/TEST_SURAHS = .*/TEST_SURAHS = None/' dorar_tafseer_by_section.py > run.py
           python run.py
 
-      - name: Upload results as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dorar-by-section
-          path: dorar_by_section/
-          retention-days: 30   # يحتفظ بالملفات 30 يوماً
+      - name: Compress results
+        run: zip -r dorar_by_section.zip dorar_by_section/
+
+      - name: Commit and push results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dorar_by_section.zip
+          git diff --cached --quiet || git commit -m "update: scraped content $(date +'%Y-%m-%d')"
+          git push
