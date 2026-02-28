@@ -227,21 +227,19 @@ def extract_articles(html):
                 fn_tag.replace_with(f" [^{fn_counter}]")
                 fn_counter += 1
 
-        # <br> → مسافة لمنع تقطيع الفقرة
+        # <br> → مسافة
         for br in block.find_all("br"):
             br.replace_with(" ")
 
-        # استخراج فقرة فقرة كوحدة كاملة
-        paras = block.find_all("p")
-        if paras:
-            clean = "\n\n".join(
-                re.sub(r' {2,}', ' ', p.get_text(separator=" ", strip=True))
-                for p in paras if p.get_text(strip=True)
-            )
-        else:
-            clean = re.sub(r' {2,}', ' ', block.get_text(separator=" ", strip=True))
+        # فواصل صريحة حول كل <p> ثم نسحب النص الكامل
+        for p in block.find_all("p"):
+            p.insert_before("\n\n")
+            p.insert_after("\n\n")
 
-        clean = re.sub(r'\n{3,}', '\n\n', clean).strip()
+        text = block.get_text(separator="", strip=False)
+        text = re.sub(r'[ \t]+', ' ', text)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        clean = text.strip()
 
         if clean:
             results.append({
