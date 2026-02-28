@@ -14,7 +14,7 @@ DELAY   = 1.2
 OUT_DIR = "dorar_by_section"
 
 # للاختبار: ضع عدد السور (None = كل القرآن)
-TEST_SURAHS = 3
+TEST_SURAHS = None
 
 
 # ─────────────────────────────────────────────
