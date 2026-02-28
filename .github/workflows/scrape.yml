@@ -20,9 +20,9 @@ jobs:
         run: pip install requests beautifulsoup4
 
       - name: Run scraper
-        run: |
-          sed 's/TEST_SURAHS = .*/TEST_SURAHS = None/' dorar_tafseer_by_section.py > run.py
-          python run.py
+        run: python dorar_tafseer_by_section.py
+        env:
+          TEST_SURAHS: "None"
 
       - name: Compress results
         run: zip -r dorar_by_section.zip dorar_by_section/
