@@ -1,7 +1,10 @@
 name: Dorar Tafseer Scraper
 
 on:
-  workflow_dispatch:   # تشغيل يدوي فقط من GitHub
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   scrape:
@@ -34,3 +37,5 @@ jobs:
           git add dorar_by_section.zip
           git diff --cached --quiet || git commit -m "update: scraped content $(date +'%Y-%m-%d')"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
