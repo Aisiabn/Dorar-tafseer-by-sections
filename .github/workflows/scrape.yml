@@ -1,56 +1,35 @@
-name: Dorar Scrapers
+name: Dorar Tafseer Scraper
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:        # تشغيل يدوي من GitHub
+  schedule:
+    - cron: '0 2 * * 0'    # كل أحد الساعة 2 صباحاً (UTC)
 
 jobs:
-  scraper-ar:
+  scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: pip install -r requirements.txt
-      - run: python Scraper_ar.py
-      - run: zip -r output_ar.zip dorar_arabia/
-      - uses: actions/upload-artifact@v4
-        with:
-          name: output-ar
-          path: output_ar.zip
-          retention-days: 7
 
-  scraper-rfs:
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: pip install -r requirements.txt
-      - run: python Scraper_rfs_114.py
-      - run: zip -r output_rfs.zip dorar_tafseer/
-      - uses: actions/upload-artifact@v4
-        with:
-          name: output-tfs
-          path: output_tfs.zip
-          retention-days: 7
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-  scraper-sections:
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - run: pip install -r requirements.txt
-      - run: python Scraper_sections_tfs.py
-      - run: zip -r output_sections.zip dorar_by_section/
-      - uses: actions/upload-artifact@v4
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run scraper (full Quran)
+        run: |
+          # تعطيل وضع الاختبار وتشغيل كل القرآن
+          sed 's/TEST_SURAHS = .*/TEST_SURAHS = None/' dorar_tafseer_by_section.py > run.py
+          python run.py
+
+      - name: Upload results as artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: output-sections
-          path: output_sections.zip
-          retention-days: 7
+          name: dorar-by-section
+          path: dorar_by_section/
+          retention-days: 30   # يحتفظ بالملفات 30 يوماً
