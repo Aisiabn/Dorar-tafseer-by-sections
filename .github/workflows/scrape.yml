@@ -1,0 +1,33 @@
+name: Dorar Scraper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        run: python scraper.py
+
+      - name: Zip output
+        run: zip -r dorar_by_section.zip dorar_by_section/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dorar-output
+          path: dorar_by_section.zip
+          retention-days: 7
