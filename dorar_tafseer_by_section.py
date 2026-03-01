@@ -214,7 +214,7 @@ def extract_articles(html):
             for h in block.find_all(f"h{i}"):
                 h.replace_with(f"\n{'#' * (i + 2)} {h.get_text(strip=True)}\n")
 
-        # الحواشي — نعالج الأقواس داخل كل حاشية قبل استخراج نصها
+        # الحواشي
         footnotes = []
         for fn_tag in block.find_all("span", class_="tip"):
             for inner in fn_tag.find_all("span", class_="aaya"):
@@ -227,17 +227,19 @@ def extract_articles(html):
                 fn_tag.replace_with(f" [^{fn_counter}]")
                 fn_counter += 1
 
-        # <br> → مسافة
+        # ✅ إصلاح ②: <br> → سطر جديد بدلاً من مسافة
         for br in block.find_all("br"):
-            br.replace_with(" ")
+            br.replace_with("\n")
 
-        # فواصل صريحة حول كل <p> ثم نسحب النص الكامل
         for p in block.find_all("p"):
             p.insert_before("\n\n")
             p.insert_after("\n\n")
 
-        text = block.get_text(separator="", strip=False)
+        # ✅ إصلاح ②: separator="\n" يفصل عناصر Block بشكل صحيح
+        text = block.get_text(separator="\n", strip=False)
         text = re.sub(r'[ \t]+', ' ', text)
+        # دمج كسرات الأسطر الناتجة عن inline elements
+        text = re.sub(r'(?<!\n)\n(?![\n#>﴿«])', ' ', text)
         text = re.sub(r'\n{3,}', '\n\n', text)
         clean = text.strip()
 
@@ -367,8 +369,9 @@ def save_by_section(db, heading_display):
                     local_map[m.group(1)] = str(global_fn)
                     global_fn += 1
 
+            # ✅ إصلاح ③: re.escape + (?!\d) يمنع مطابقة [^1] داخل [^10] أو [^12]
             for loc, gbl in local_map.items():
-                text = re.sub(rf'\[\^{loc}\]', f'[^{gbl}]', text)
+                text = re.sub(rf'\[\^{re.escape(loc)}\](?!\d)', f'[^{gbl}]', text)
 
             lines.append(f"{text}\n\n")
 
