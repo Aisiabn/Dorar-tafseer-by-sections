@@ -1,0 +1,42 @@
+name: Dorar Tafseer Scraper
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run scraper
+        run: python dorar_tafseer_by_section.py
+        env:
+          TEST_SURAHS: "None"
+
+      - name: Compress results
+        run: zip -r dorar_by_section.zip dorar_by_section/
+
+      - name: Commit and push results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dorar_by_section.zip
+          git diff --cached --quiet || (
+            git commit -m "update: scraped content $(date +'%Y-%m-%d')" &&
+            git pull --rebase origin main &&
+            git push
+          )
